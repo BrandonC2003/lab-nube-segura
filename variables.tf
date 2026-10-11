@@ -18,9 +18,15 @@ variable "prefijo" {
 variable "etiquetas" {
   description = "Etiquetas comunes para todos los recursos"
   type        = map(string)
-  default     = {
+  default = {
     proyecto = "modelo-seguridad-nube"
     entorno  = "prototipo"
     gestion  = "terraform"
   }
+}
+
+variable "perimetro_activo" {
+  description = "Si es true, se despliega la capa cara (Firewall, App Gateway, VPN Gateway)"
+  type        = bool
+  default     = false
 }
