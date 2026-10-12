@@ -89,3 +89,16 @@ output "cuentas_emergencia" {
   description = "UPN de las cuentas de emergencia (monitoreadas en Sentinel)"
   value       = [for u in azuread_user.emergencia : u.user_principal_name]
 }
+
+# ---------- Monitoreo y respaldo ----------
+output "log_analytics_workspace" {
+  value = azurerm_log_analytics_workspace.principal.name
+}
+
+output "playbook_id" {
+  value = local.playbook_id
+}
+
+output "boveda_respaldo" {
+  value = azurerm_recovery_services_vault.principal.name
+}
