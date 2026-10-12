@@ -87,3 +87,14 @@ resource "azurerm_virtual_network_peering" "cargas_a_hub" {
   allow_forwarded_traffic   = true
   use_remote_gateways       = var.perimetro_activo # solo funciona si el VPN Gateway existe
 }
+
+# IP del VPN Gateway: vive en la capa persistente para que nunca cambie
+resource "azurerm_public_ip" "vpn_gateway" {
+  name                = "pip-${var.prefijo}-vpngw"
+  location            = var.ubicacion
+  resource_group_name = local.rg_core
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = ["1", "2", "3"] # requerido por la SKU VpnGw1AZ
+  tags                = var.etiquetas
+}

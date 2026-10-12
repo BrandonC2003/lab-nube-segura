@@ -30,3 +30,14 @@ variable "perimetro_activo" {
   type        = bool
   default     = false
 }
+
+variable "ssh_clave_publica" {
+  description = "Ruta a la llave pública SSH"
+  type        = string
+  default     = "~/.ssh/lab_azure.pub"
+}
+
+variable "ip_admin" {
+  description = "IP pública en formato CIDR (ej. 190.86.1.2/32), única autorizada para SSH"
+  type        = string
+}
