@@ -46,3 +46,17 @@ output "sql_ip_privada" {
   description = "IP privada asignada al punto de conexión de SQL en snet-datos"
   value       = azurerm_private_endpoint.sql.private_service_connection[0].private_ip_address
 }
+
+output "ips_cargas" {
+  description = "IPs privadas de las VMs del spoke"
+  value = {
+    web01  = module.vm_web01.ip_privada
+    erp01  = module.vm_erp01.ip_privada
+    jump01 = module.vm_jump01.ip_privada
+  }
+}
+
+output "ca_interna_pem" {
+  description = "Certificado público de la CA interna (para confiar en web01 desde los clientes)"
+  value       = tls_self_signed_cert.ca.cert_pem
+}

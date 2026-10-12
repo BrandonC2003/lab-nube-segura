@@ -24,12 +24,12 @@ resource "azurerm_key_vault" "principal" {
   }
 }
 
-# El equipo puede administrar claves (plano de datos)
+# El equipo administra claves, secretos y certificados (plano de datos)
 resource "azurerm_role_assignment" "kv_equipo" {
   for_each = toset(var.administradores_lab)
 
   scope                = azurerm_key_vault.principal.id
-  role_definition_name = "Key Vault Crypto Officer"
+  role_definition_name = "Key Vault Administrator"
   principal_id         = each.value
 }
 

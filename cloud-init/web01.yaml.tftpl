@@ -1,0 +1,42 @@
+#cloud-config
+package_update: true
+packages:
+  - docker.io
+  - nginx
+
+write_files:
+  # Certificado firmado por la CA interna ("sesión TLS 2": WAF -> web01)
+  - path: /etc/nginx/tls/web01.crt
+    permissions: "0644"
+    content: |
+      ${indent(6, certificado)}
+
+  - path: /etc/nginx/tls/web01.key
+    permissions: "0600"
+    content: |
+      ${indent(6, llave_privada)}
+
+  # nginx termina TLS y reenvía a Juice Shop, que solo escucha en localhost
+  - path: /etc/nginx/sites-available/juiceshop
+    content: |
+      server {
+        listen 443 ssl;
+        server_name web01.interno.lab;
+
+        ssl_certificate     /etc/nginx/tls/web01.crt;
+        ssl_certificate_key /etc/nginx/tls/web01.key;
+        ssl_protocols       TLSv1.2 TLSv1.3;
+
+        location / {
+          proxy_pass http://127.0.0.1:3000;
+          proxy_set_header Host $host;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+      }
+
+runcmd:
+  - systemctl enable --now docker
+  - docker run -d --name juiceshop --restart unless-stopped -p 127.0.0.1:3000:3000 bkimminich/juice-shop
+  - ln -sf /etc/nginx/sites-available/juiceshop /etc/nginx/sites-enabled/juiceshop
+  - rm -f /etc/nginx/sites-enabled/default
+  - systemctl restart nginx
