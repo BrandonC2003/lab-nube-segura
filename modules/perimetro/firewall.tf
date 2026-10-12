@@ -16,6 +16,10 @@ resource "azurerm_firewall_policy" "this" {
   threat_intelligence_mode = "Deny" # bloquea IPs/dominios maliciosos conocidos
   tags                     = var.etiquetas
 
+  # SNAT solo hacia la zona de datos: la respuesta del punto de conexión privado
+  # vuelve por el Firewall y ambos sentidos quedan registrados (prueba V6)
+  private_ip_ranges = var.rangos_sin_snat
+
   # IDPS: alerta y bloquea por firmas (prueba V8)
   intrusion_detection {
     mode = "Deny"
@@ -62,6 +66,14 @@ resource "azurerm_firewall_policy_rule_collection_group" "this" {
       name                  = "apps-a-datos-sql"
       protocols             = ["TCP"]
       source_addresses      = [var.rangos.apps]
+      destination_addresses = [var.rangos.datos]
+      destination_ports     = ["1433"]
+    }
+
+    rule {
+      name                  = "gestion-a-datos-sql"
+      protocols             = ["TCP"]
+      source_addresses      = [var.rangos.gestion]
       destination_addresses = [var.rangos.datos]
       destination_ports     = ["1433"]
     }

@@ -32,7 +32,7 @@ resource "azurerm_route_table" "gateway" {
   }
 }
 
-# Spoke: Internet, App Gateway y sede, todo por el Firewall (tráfico simétrico)
+# Spoke: Internet, App Gateway, sede y zona de datos, todo por el Firewall (tráfico simétrico)
 resource "azurerm_route_table" "spoke" {
   name                          = "rt-${var.prefijo}-spoke"
   location                      = var.ubicacion
@@ -50,6 +50,13 @@ resource "azurerm_route_table" "spoke" {
   route {
     name                   = "appgw-por-firewall"
     address_prefix         = var.rangos.appgw
+    next_hop_type          = "VirtualAppliance"
+    next_hop_in_ip_address = local.ip_firewall
+  }
+
+  route {
+    name                   = "datos-por-firewall"
+    address_prefix         = var.rangos.datos
     next_hop_type          = "VirtualAppliance"
     next_hop_in_ip_address = local.ip_firewall
   }

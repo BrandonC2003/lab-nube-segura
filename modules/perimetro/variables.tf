@@ -52,6 +52,11 @@ variable "rangos" {
   })
 }
 
+variable "rangos_sin_snat" {
+  description = "Destinos privados a los que el Firewall no aplica SNAT (todos menos la zona de datos)"
+  type        = list(string)
+}
+
 # ---------- VPN ----------
 variable "ip_publica_vpn_id" {
   description = "IP pública persistente del VPN Gateway (vive en rg-proto-core)"
@@ -86,6 +91,22 @@ variable "ca_interna_pem" {
 variable "appgw_identidad_id" {
   description = "Identidad administrada asignada por el usuario con permiso de lectura de secretos en Key Vault"
   type        = string
+}
+
+variable "waf_reglas_deshabilitadas" {
+  description = "Reglas del conjunto administrado desactivadas por falso positivo, por grupo de reglas"
+  type        = map(list(string))
+  default     = {}
+}
+
+variable "waf_exclusiones" {
+  description = "Elementos de la solicitud excluidos de la evaluación del WAF por falso positivo"
+  type = list(object({
+    variable = string # p. ej. RequestCookieNames, RequestArgNames, RequestHeaderNames
+    operador = string # Equals, StartsWith, EndsWith, Contains, EqualsAny
+    selector = string
+  }))
+  default = []
 }
 
 variable "appgw_certificado_secret_id" {

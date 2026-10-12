@@ -1,0 +1,51 @@
+#cloud-config
+package_update: true
+packages:
+  - curl
+  - nmap
+  - netcat-openbsd
+  - dnsutils
+  - traceroute
+  - nginx
+
+write_files:
+  # Certificado firmado por la CA interna para el servicio local de reversión (prueba V11)
+  - path: /etc/nginx/tls/srv01.crt
+    permissions: "0644"
+    content: |
+      ${indent(6, certificado)}
+
+  - path: /etc/nginx/tls/srv01.key
+    permissions: "0600"
+    content: |
+      ${indent(6, llave_privada)}
+
+  - path: /var/www/local/index.html
+    content: |
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><title>Servicio local</title></head>
+      <body>
+        <h1>Aplicacion web - servicio local (sede)</h1>
+        <p>Servidor: vm-srv01. Plan de vuelta atras activo.</p>
+      </body>
+      </html>
+
+  - path: /etc/nginx/sites-available/local
+    content: |
+      server {
+        listen 443 ssl;
+        server_name app.interno.lab srv01.interno.lab;
+
+        ssl_certificate     /etc/nginx/tls/srv01.crt;
+        ssl_certificate_key /etc/nginx/tls/srv01.key;
+        ssl_protocols       TLSv1.2 TLSv1.3;
+
+        root  /var/www/local;
+        index index.html;
+      }
+
+runcmd:
+  - ln -sf /etc/nginx/sites-available/local /etc/nginx/sites-enabled/local
+  - rm -f /etc/nginx/sites-enabled/default
+  - systemctl restart nginx

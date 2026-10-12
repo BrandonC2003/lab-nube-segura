@@ -107,6 +107,42 @@ locals {
   }
 }
 
+# Certificado del servicio local que asume app.interno.lab durante la reversión (V11)
+resource "tls_private_key" "srv01" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "tls_cert_request" "srv01" {
+  private_key_pem = tls_private_key.srv01.private_key_pem
+  dns_names       = ["app.interno.lab", "srv01.interno.lab"]
+  ip_addresses    = ["192.168.30.10"]
+
+  subject {
+    common_name  = "app.interno.lab"
+    organization = "Prototipo UTEC"
+  }
+}
+
+resource "tls_locally_signed_cert" "srv01" {
+  cert_request_pem      = tls_cert_request.srv01.cert_request_pem
+  ca_private_key_pem    = tls_private_key.ca.private_key_pem
+  ca_cert_pem           = tls_self_signed_cert.ca.cert_pem
+  validity_period_hours = 8760
+
+  allowed_uses = ["digital_signature", "key_encipherment", "server_auth"]
+}
+
+locals {
+  cloud_init_sede = {
+    vm-admin01 = file("${path.module}/cloud-init/herramientas.yaml")
+    vm-srv01 = templatefile("${path.module}/cloud-init/srv01.yaml.tftpl", {
+      certificado   = tls_locally_signed_cert.srv01.cert_pem
+      llave_privada = tls_private_key.srv01.private_key_pem
+    })
+  }
+}
+
 module "vm_sede" {
   source   = "./modules/vm_linux"
   for_each = local.equipos_sede
@@ -117,6 +153,6 @@ module "vm_sede" {
   subnet_id         = module.vnet_sede.subredes[each.value.subred]
   ip_privada        = each.value.ip
   ssh_clave_publica = local.ssh_clave
-  cloud_init        = file("${path.module}/cloud-init/herramientas.yaml")
+  cloud_init        = local.cloud_init_sede[each.key]
   etiquetas         = var.etiquetas
 }

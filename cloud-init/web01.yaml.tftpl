@@ -21,7 +21,7 @@ write_files:
     content: |
       server {
         listen 443 ssl;
-        server_name web01.interno.lab;
+        server_name web01.interno.lab app.interno.lab;
 
         ssl_certificate     /etc/nginx/tls/web01.crt;
         ssl_certificate_key /etc/nginx/tls/web01.key;

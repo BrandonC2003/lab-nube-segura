@@ -18,6 +18,24 @@ locals {
   sentinel_id  = azurerm_sentinel_log_analytics_workspace_onboarding.principal.workspace_id
 }
 
+# Prueba V9: registros por fuente en las últimas 24 h
+resource "azurerm_log_analytics_saved_search" "v9_fuentes" {
+  name                       = "v9-fuentes-con-datos"
+  log_analytics_workspace_id = local.workspace_id
+  category                   = "Validacion"
+  display_name               = "V9 - Fuentes con datos en las últimas 24 h"
+
+  query = <<-KQL
+    union withsource = Tabla isfuzzy = true
+      SigninLogs, AuditLogs, AzureActivity, AzureDiagnostics, Syslog, SecurityEvent, Heartbeat,
+      AZFWNetworkRule, AZFWApplicationRule, AZFWIdpsSignature, AGWAccessLogs, AGWFirewallLogs
+    | where TimeGenerated > ago(24h)
+    | extend Fuente = iff(Tabla == "AzureDiagnostics", strcat("AzureDiagnostics/", Category), Tabla)
+    | summarize Registros = count(), Ultimo = max(TimeGenerated) by Fuente
+    | order by Fuente asc
+  KQL
+}
+
 # ================= FUENTES DE DATOS =================
 # Entra ID: inicios de sesión y auditoría (requiere licencia P1/P2)
 resource "azurerm_monitor_aad_diagnostic_setting" "entra" {

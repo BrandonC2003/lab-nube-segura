@@ -75,12 +75,17 @@ resource "azurerm_mssql_server" "erp" {
 resource "azurerm_mssql_database" "erp" {
   name        = "sqldb-erp"
   server_id   = azurerm_mssql_server.erp.id
-  sku_name    = "Basic"
+  sku_name    = "S0" # Basic limita la restauración a un punto en el tiempo a 7 días
   max_size_gb = 2
   tags        = var.etiquetas
 
+  # RPO 15 min / RTO 2 h: restauración a un punto en el tiempo de 35 días (prueba V10)
   short_term_retention_policy {
-    retention_days = 7 # restauración a un punto en el tiempo (prueba V10)
+    retention_days = 35
+  }
+
+  long_term_retention_policy {
+    monthly_retention = "P12M"
   }
 }
 

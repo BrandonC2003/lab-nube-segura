@@ -32,7 +32,7 @@ resource "tls_private_key" "web01" {
 
 resource "tls_cert_request" "web01" {
   private_key_pem = tls_private_key.web01.private_key_pem
-  dns_names       = ["web01.interno.lab"]
+  dns_names       = ["web01.interno.lab", "app.interno.lab"]
   ip_addresses    = [local.ip_web01]
 
   subject {

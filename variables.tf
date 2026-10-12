@@ -53,6 +53,33 @@ variable "ips_equipo" {
   default     = []
 }
 
+variable "waf_reglas_deshabilitadas" {
+  description = "Reglas del WAF desactivadas por falso positivo, por grupo (p. ej. { \"SQLI\" = [\"942430\"] })"
+  type        = map(list(string))
+  default     = {}
+}
+
+variable "waf_exclusiones" {
+  description = "Exclusiones del WAF por falso positivo"
+  type = list(object({
+    variable = string
+    operador = string
+    selector = string
+  }))
+  default = []
+}
+
+variable "servicio_app_activo" {
+  description = "Destino de app.interno.lab: \"nube\" (vm-web01) o \"local\" (vm-srv01, plan de reversión V11)"
+  type        = string
+  default     = "nube"
+
+  validation {
+    condition     = contains(["nube", "local"], var.servicio_app_activo)
+    error_message = "Valores válidos: nube o local."
+  }
+}
+
 variable "estado_acceso_condicional" {
   description = "Estado de las políticas de acceso condicional: primero solo informe, luego activadas"
   type        = string

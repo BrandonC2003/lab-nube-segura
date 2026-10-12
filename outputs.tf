@@ -102,3 +102,8 @@ output "playbook_id" {
 output "boveda_respaldo" {
   value = azurerm_recovery_services_vault.principal.name
 }
+
+output "servicio_app_activo" {
+  description = "Destino actual de app.interno.lab (prueba V11)"
+  value       = "${var.servicio_app_activo} -> ${local.destinos_app[var.servicio_app_activo]}"
+}

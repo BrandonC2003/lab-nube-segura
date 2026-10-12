@@ -266,6 +266,34 @@ resource "azuread_conditional_access_policy" "ca05_mfa_administracion_azure" {
   }
 }
 
+# Condición de dispositivo para el acceso remoto (prueba V3): solo plataformas aprobadas
+resource "azuread_conditional_access_policy" "ca06_plataformas_aprobadas" {
+  display_name = "CA06 - Comercial remoto solo desde plataformas aprobadas"
+  state        = var.estado_acceso_condicional
+
+  conditions {
+    client_app_types = ["all"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    users {
+      included_groups = [azuread_group.grupo["comercial-remoto"].object_id]
+    }
+
+    platforms {
+      included_platforms = ["all"]
+      excluded_platforms = ["windows", "macOS", "iOS", "android"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+
 # ================= PIM: ROLES DE ENTRA ID =================
 resource "azuread_directory_role" "user_admin" {
   display_name = "User Administrator"

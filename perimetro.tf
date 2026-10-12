@@ -89,6 +89,16 @@ module "perimetro" {
     appgw     = "10.10.2.0/24"
   }
 
+  # Rangos privados menos 10.20.2.0/24 (zona de datos), que sí recibe SNAT
+  rangos_sin_snat = [
+    "10.10.0.0/16", "10.20.0.0/23", "10.20.3.0/24", "10.20.4.0/22", "10.20.8.0/21",
+    "10.20.16.0/20", "10.20.32.0/19", "10.20.64.0/18", "10.20.128.0/17",
+    "172.16.0.0/12", "192.168.0.0/16",
+  ]
+
+  waf_reglas_deshabilitadas = var.waf_reglas_deshabilitadas
+  waf_exclusiones           = var.waf_exclusiones
+
   ip_publica_vpn_id = azurerm_public_ip.vpn_gateway.id
   ip_publica_sede   = azurerm_public_ip.router_sede.ip_address
   vpn_psk           = random_password.vpn_psk.result

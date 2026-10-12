@@ -21,10 +21,35 @@ resource "azurerm_web_application_firewall_policy" "this" {
     request_body_check = true
   }
 
+  # Ajustes por falsos positivos documentados (prueba V7)
   managed_rules {
+    dynamic "exclusion" {
+      for_each = var.waf_exclusiones
+      content {
+        match_variable          = exclusion.value.variable
+        selector_match_operator = exclusion.value.operador
+        selector                = exclusion.value.selector
+      }
+    }
+
     managed_rule_set {
       type    = "Microsoft_DefaultRuleSet" # DRS: sucesor del CRS de OWASP
       version = "2.1"
+
+      dynamic "rule_group_override" {
+        for_each = var.waf_reglas_deshabilitadas
+        content {
+          rule_group_name = rule_group_override.key
+
+          dynamic "rule" {
+            for_each = rule_group_override.value
+            content {
+              id      = rule.value
+              enabled = false
+            }
+          }
+        }
+      }
     }
   }
 }

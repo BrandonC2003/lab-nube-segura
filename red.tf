@@ -54,6 +54,8 @@ module "vnet_cargas" {
       endpoints_privados = true
       reglas_nsg = [
         { nombre = "permitir-sql-desde-apps", prioridad = 100, acceso = "Allow", puertos = ["1433"], origen = "10.20.1.0/24" },
+        { nombre = "permitir-sql-desde-gestion", prioridad = 110, acceso = "Allow", puertos = ["1433"], origen = "10.20.3.0/24" },
+        { nombre = "permitir-sql-desde-firewall", prioridad = 120, acceso = "Allow", puertos = ["1433"], origen = "10.10.0.0/26" },
         { nombre = "denegar-resto-vnet", prioridad = 4000, acceso = "Deny", protocolo = "*", puertos = ["*"], origen = "VirtualNetwork" },
       ]
     }
