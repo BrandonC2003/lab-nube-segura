@@ -27,3 +27,22 @@ output "vpn_psk" {
 output "ssh_router_sede" {
   value = "ssh -i ~/.ssh/lab_azure azureadmin@${azurerm_public_ip.router_sede.ip_address}"
 }
+
+output "key_vault_nombre" {
+  description = "Nombre del Key Vault (incluye el sufijo aleatorio)"
+  value       = azurerm_key_vault.principal.name
+}
+
+output "sql_servidor_fqdn" {
+  description = "Nombre DNS del servidor SQL; desde las redes enlazadas resuelve a una IP privada"
+  value       = azurerm_mssql_server.erp.fully_qualified_domain_name
+}
+
+output "sql_base_datos" {
+  value = azurerm_mssql_database.erp.name
+}
+
+output "sql_ip_privada" {
+  description = "IP privada asignada al punto de conexión de SQL en snet-datos"
+  value       = azurerm_private_endpoint.sql.private_service_connection[0].private_ip_address
+}

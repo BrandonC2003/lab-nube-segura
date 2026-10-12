@@ -41,3 +41,22 @@ variable "ip_admin" {
   description = "IP pública en formato CIDR (ej. 190.86.1.2/32), única autorizada para SSH"
   type        = string
 }
+
+variable "administradores_lab" {
+  description = "Object IDs de Entra ID de los integrantes del equipo"
+  type        = list(string)
+}
+
+variable "ips_equipo" {
+  description = "IPs públicas adicionales de los compañeros (CIDR), con acceso al Key Vault"
+  type        = list(string)
+  default     = []
+}
+
+variable "sql_admin" {
+  description = "Administrador de Entra ID del servidor SQL"
+  type = object({
+    login     = string
+    object_id = string
+  })
+}

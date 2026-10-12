@@ -13,3 +13,10 @@ resource "azurerm_resource_group" "rg" {
   location = var.ubicacion
   tags     = merge(var.etiquetas, { descripcion = each.value })
 }
+
+# Sufijo para recursos cuyo nombre debe ser único en todo Azure
+resource "random_string" "sufijo" {
+  length  = 5
+  upper   = false
+  special = false
+}
