@@ -60,3 +60,21 @@ output "ca_interna_pem" {
   description = "Certificado público de la CA interna (para confiar en web01 desde los clientes)"
   value       = tls_self_signed_cert.ca.cert_pem
 }
+
+# ---------- Perímetro (null cuando perimetro_activo = false) ----------
+output "ip_publica_appgw" {
+  description = "IP pública del WAF; prueba V7: curl -k https://<ip>"
+  value       = one(module.perimetro[*].ip_publica_appgw)
+}
+
+output "ip_privada_firewall" {
+  value = one(module.perimetro[*].ip_privada_firewall)
+}
+
+output "vpn_estado_conexion" {
+  description = "Comando para consultar el estado del túnel (prueba V2)"
+  value = try(
+    "az network vpn-connection show --ids ${module.perimetro[0].vpn_conexion_id} --query connectionStatus -o tsv",
+    "perímetro apagado"
+  )
+}

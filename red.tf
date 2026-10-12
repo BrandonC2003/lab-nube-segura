@@ -16,7 +16,15 @@ module "vnet_hub" {
   subredes = {
     AzureFirewallSubnet = { prefijo = "10.10.0.0/26", con_nsg = false }
     GatewaySubnet       = { prefijo = "10.10.1.0/27", con_nsg = false }
-    snet-appgw          = { prefijo = "10.10.2.0/24", con_nsg = false }
+    snet-appgw = {
+      prefijo = "10.10.2.0/24"
+      # Reglas que exige Application Gateway v2 + publicación solo por HTTPS
+      reglas_nsg = [
+        { nombre = "permitir-gatewaymanager", prioridad = 100, acceso = "Allow", puertos = ["65200-65535"], origen = "GatewayManager" },
+        { nombre = "permitir-azureloadbalancer", prioridad = 110, acceso = "Allow", protocolo = "*", puertos = ["*"], origen = "AzureLoadBalancer" },
+        { nombre = "permitir-https-internet", prioridad = 120, acceso = "Allow", puertos = ["443"], origen = "Internet" },
+      ]
+    }
   }
 }
 
@@ -63,6 +71,7 @@ module "vnet_cargas" {
       endpoints_privados = true
       reglas_nsg = [
         { nombre = "permitir-keyvault-desde-cargas", prioridad = 100, acceso = "Allow", puertos = ["443"], origen = "10.20.0.0/16" },
+        { nombre = "permitir-keyvault-desde-appgw", prioridad = 110, acceso = "Allow", puertos = ["443"], origen = "10.10.2.0/24" },
         { nombre = "denegar-resto-vnet", prioridad = 4000, acceso = "Deny", protocolo = "*", puertos = ["*"], origen = "VirtualNetwork" },
       ]
     }
@@ -86,6 +95,9 @@ resource "azurerm_virtual_network_peering" "cargas_a_hub" {
   remote_virtual_network_id = module.vnet_hub.id
   allow_forwarded_traffic   = true
   use_remote_gateways       = var.perimetro_activo # solo funciona si el VPN Gateway existe
+
+  # Al activar, el gateway debe existir antes; al desactivar, esto se apaga antes de borrarlo
+  depends_on = [module.perimetro]
 }
 
 # IP del VPN Gateway: vive en la capa persistente para que nunca cambie
