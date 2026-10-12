@@ -85,7 +85,7 @@ resource "azurerm_virtual_network_peering" "hub_a_cargas" {
   virtual_network_name      = module.vnet_hub.nombre
   remote_virtual_network_id = module.vnet_cargas.id
   allow_forwarded_traffic   = true
-  allow_gateway_transit     = true # el hub "presta" su VPN Gateway al spoke
+  allow_gateway_transit     = true
 }
 
 resource "azurerm_virtual_network_peering" "cargas_a_hub" {
@@ -94,13 +94,13 @@ resource "azurerm_virtual_network_peering" "cargas_a_hub" {
   virtual_network_name      = module.vnet_cargas.nombre
   remote_virtual_network_id = module.vnet_hub.id
   allow_forwarded_traffic   = true
-  use_remote_gateways       = var.perimetro_activo # solo funciona si el VPN Gateway existe
+  use_remote_gateways       = var.perimetro_activo # requiere que el VPN Gateway exista
 
-  # Al activar, el gateway debe existir antes; al desactivar, esto se apaga antes de borrarlo
+  # Garantiza el orden de creación y destrucción respecto al VPN Gateway
   depends_on = [module.perimetro]
 }
 
-# IP del VPN Gateway: vive en la capa persistente para que nunca cambie
+# IP del VPN Gateway en la capa persistente: se conserva entre despliegues del perímetro
 resource "azurerm_public_ip" "vpn_gateway" {
   name                = "pip-${var.prefijo}-vpngw"
   location            = var.ubicacion

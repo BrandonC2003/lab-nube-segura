@@ -182,7 +182,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "this" {
       }
     }
 
-    # Azure Monitor Agent (lección 8)
+    # Azure Monitor Agent
     rule {
       name             = "azure-monitor-agent"
       source_addresses = [var.rangos.cargas]

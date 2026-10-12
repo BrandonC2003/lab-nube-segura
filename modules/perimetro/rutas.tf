@@ -1,6 +1,5 @@
 # ================= RUTAS DEFINIDAS POR EL USUARIO (UDR) =================
-# Obligan a que todo el tráfico entre zonas pase por el Firewall, en ambos sentidos.
-# Viven en este módulo porque sin Firewall dejarían al spoke sin salida.
+# Todo el tráfico entre zonas pasa por el Firewall en ambos sentidos.
 
 # App Gateway -> spoke. App Gateway v2 no admite 0.0.0.0/0 hacia un NVA.
 resource "azurerm_route_table" "appgw" {
@@ -38,7 +37,7 @@ resource "azurerm_route_table" "spoke" {
   name                          = "rt-${var.prefijo}-spoke"
   location                      = var.ubicacion
   resource_group_name           = var.grupo_recursos
-  bgp_route_propagation_enabled = false # que la VPN no "enseñe" un camino que se salte el Firewall
+  bgp_route_propagation_enabled = false # evita rutas aprendidas por VPN que omitan el Firewall
   tags                          = var.etiquetas
 
   route {

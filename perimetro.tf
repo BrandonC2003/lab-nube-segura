@@ -1,6 +1,5 @@
-# ================= PIEZAS PERSISTENTES (sin costo) =================
-# Viven fuera del módulo para no repetir en cada sesión la espera de propagación
-# de RBAC (403) ni regenerar el certificado.
+# ================= IDENTIDAD Y CERTIFICADO DEL APP GATEWAY =================
+# Persistentes: se conservan entre despliegues del perímetro.
 
 # Identidad con la que App Gateway lee su certificado de Key Vault
 resource "azurerm_user_assigned_identity" "appgw" {
@@ -63,8 +62,8 @@ resource "azurerm_key_vault_certificate" "appgw" {
   depends_on = [azurerm_role_assignment.kv_equipo]
 }
 
-# ================= CAPA EFÍMERA (≈ USD 2.40/h) =================
-# count = 0 -> no existe; count = 1 -> se crea. Se controla con var.perimetro_activo.
+# ================= PERÍMETRO =================
+# Capa de mayor costo: solo se despliega con perimetro_activo = true.
 module "perimetro" {
   source = "./modules/perimetro"
   count  = var.perimetro_activo ? 1 : 0

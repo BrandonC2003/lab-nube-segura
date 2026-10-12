@@ -56,7 +56,6 @@ resource "azurerm_application_gateway" "this" {
     capacity = 1 # una instancia fija: suficiente para el prototipo
   }
 
-  # Lee el certificado del listener desde Key Vault
   identity {
     type         = "UserAssigned"
     identity_ids = [var.appgw_identidad_id]
@@ -142,7 +141,6 @@ resource "azurerm_application_gateway" "this" {
     backend_http_settings_name = local.appgw.ajustes
   }
 
-  # Con las rutas y reglas listas, el tráfico hacia web01 y Key Vault ya pasa por el Firewall
   depends_on = [
     azurerm_subnet_route_table_association.appgw,
     azurerm_firewall_policy_rule_collection_group.this,

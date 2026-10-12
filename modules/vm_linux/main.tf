@@ -43,7 +43,7 @@ resource "azurerm_linux_virtual_machine" "this" {
   }
 
   identity {
-    type = "SystemAssigned" # la usará el agente de monitoreo en la lección 8
+    type = "SystemAssigned" # usada por Azure Monitor Agent
   }
 
   boot_diagnostics {} # habilita la consola serie

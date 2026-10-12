@@ -5,7 +5,7 @@ locals {
 }
 
 # ================= CA INTERNA =================
-# Firma los certificados internos; App Gateway confiará en ella (lección 6)
+# Firma los certificados internos; App Gateway la usa para validar el backend
 resource "tls_private_key" "ca" {
   algorithm = "RSA"
   rsa_bits  = 2048
@@ -51,7 +51,6 @@ resource "tls_locally_signed_cert" "web01" {
 }
 
 # ================= VM WEB01 (Juice Shop) =================
-# Bloque propio y no for_each: su cloud-init lleva una llave privada (valor sensible)
 module "vm_web01" {
   source = "./modules/vm_linux"
 
@@ -97,7 +96,7 @@ module "vm_erp01" {
   etiquetas      = var.etiquetas
 }
 
-# La contraseña local de erp01 queda en Key Vault, no en la pantalla
+# Contraseña del administrador local custodiada en Key Vault
 resource "azurerm_key_vault_secret" "erp01_admin" {
   name         = "vm-erp01-azureadmin"
   value        = module.vm_erp01.contrasena_admin

@@ -1,4 +1,3 @@
-# ---------- Información del contexto actual (solo lectura) ----------
 data "azurerm_client_config" "actual" {}
 
 locals {
@@ -12,7 +11,7 @@ resource "azurerm_key_vault" "principal" {
   resource_group_name        = local.rg_core
   tenant_id                  = data.azurerm_client_config.actual.tenant_id
   sku_name                   = "standard"
-  rbac_authorization_enabled = true # permisos por roles de Azure, no por "access policies"
+  rbac_authorization_enabled = true
   purge_protection_enabled   = true # obligatorio para TDE con CMK
   soft_delete_retention_days = 7
   tags                       = var.etiquetas
@@ -33,7 +32,7 @@ resource "azurerm_role_assignment" "kv_equipo" {
   principal_id         = each.value
 }
 
-# Clave RSA 2048 para TDE, con rotación anual 
+# Clave RSA 2048 para TDE, con rotación anual
 resource "azurerm_key_vault_key" "tde" {
   name         = "clave-tde-sql"
   key_vault_id = azurerm_key_vault.principal.id
@@ -114,7 +113,7 @@ locals {
     sede   = module.vnet_sede.id
   }
 
-  # 2 zonas × 3 redes = 6 enlaces: "sql-hub", "sql-cargas", ..., "kv-sede"
+  # Un enlace por cada combinación zona-VNet ("sql-hub", "kv-sede", ...)
   enlaces_dns = {
     for par in setproduct(keys(local.zonas_privadas), keys(local.vnets_con_dns)) :
     "${par[0]}-${par[1]}" => { zona = par[0], vnet = par[1] }

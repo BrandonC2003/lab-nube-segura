@@ -1,6 +1,6 @@
 locals {
   rg_sede        = azurerm_resource_group.rg["sede"].name
-  ip_router_sede = "192.168.0.4" # primera IP utilizable 
+  ip_router_sede = "192.168.0.4" # primera IP utilizable
   ssh_clave      = file(pathexpand(var.ssh_clave_publica))
 }
 

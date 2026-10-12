@@ -18,7 +18,7 @@ resource "azurerm_virtual_network_gateway" "this" {
   }
 }
 
-# Representa al router de la sede: su IP pública y las redes que hay detrás
+# Router de la sede y redes que publica
 resource "azurerm_local_network_gateway" "sede" {
   name                = "lgw-${var.prefijo}-sede"
   location            = var.ubicacion
@@ -39,8 +39,7 @@ resource "azurerm_virtual_network_gateway_connection" "sede" {
   shared_key                 = var.vpn_psk
   tags                       = var.etiquetas
 
-  # Política fija (no la negociación por defecto): debe coincidir con
-  # "aes256-sha256-modp2048" de router-sede.yaml.tftpl
+  # Política IPsec explícita; coincide con "aes256-sha256-modp2048" de router-sede.yaml.tftpl
   ipsec_policy {
     ike_encryption   = "AES256"
     ike_integrity    = "SHA256"

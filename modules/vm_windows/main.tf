@@ -1,4 +1,4 @@
-# Contraseña única por VM; nunca se escribe a mano ni se repite entre equipos
+# Contraseña aleatoria y única por VM
 resource "random_password" "admin" {
   length           = 24
   special          = true
@@ -56,7 +56,6 @@ resource "azurerm_windows_virtual_machine" "this" {
   boot_diagnostics {} # habilita la consola serie
 }
 
-# Solo se crea si se pasó un script (count = 0 o 1)
 resource "azurerm_virtual_machine_extension" "script_inicio" {
   count = var.script_inicio == null ? 0 : 1
 
@@ -67,8 +66,7 @@ resource "azurerm_virtual_machine_extension" "script_inicio" {
   type_handler_version = "1.10"
   tags                 = var.etiquetas
 
-  # -EncodedCommand espera Base64 de texto UTF-16LE; así no hay problemas de comillas.
-  # protected_settings se cifra en Azure y no aparece en el portal.
+  # protected_settings se almacena cifrado y no se expone en el portal
   protected_settings = jsonencode({
     commandToExecute = "powershell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(var.script_inicio, "UTF-16LE")}"
   })
