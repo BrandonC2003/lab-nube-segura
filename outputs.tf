@@ -78,3 +78,14 @@ output "vpn_estado_conexion" {
     "perímetro apagado"
   )
 }
+
+# ---------- Identidad ----------
+output "usuarios_prueba" {
+  description = "UPN de los usuarios de prueba; contraseñas en Key Vault (entra-<usuario>)"
+  value       = { for clave, u in azuread_user.usuario : clave => u.user_principal_name }
+}
+
+output "cuentas_emergencia" {
+  description = "UPN de las cuentas de emergencia (monitoreadas en Sentinel)"
+  value       = [for u in azuread_user.emergencia : u.user_principal_name]
+}

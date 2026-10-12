@@ -11,6 +11,10 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.6"
     }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 3.0"
+    }
     tls = {
       source  = "hashicorp/tls"
       version = "~> 4.0"
@@ -27,3 +31,4 @@ provider "azurerm" {
   subscription_id = var.subscription_id
 }
 
+provider "azuread" {}

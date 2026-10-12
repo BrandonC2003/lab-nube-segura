@@ -42,6 +42,13 @@ variable "script_inicio" {
   default     = null
 }
 
+variable "variables_script" {
+  description = "Variables de PowerShell que se definen antes del script de inicio (p. ej. contraseñas)"
+  type        = map(string)
+  default     = {}
+  sensitive   = true
+}
+
 variable "etiquetas" {
   type    = map(string)
   default = {}

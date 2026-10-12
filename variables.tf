@@ -53,10 +53,13 @@ variable "ips_equipo" {
   default     = []
 }
 
-variable "sql_admin" {
-  description = "Administrador de Entra ID del servidor SQL"
-  type = object({
-    login     = string
-    object_id = string
-  })
+variable "estado_acceso_condicional" {
+  description = "Estado de las políticas de acceso condicional: primero solo informe, luego activadas"
+  type        = string
+  default     = "enabledForReportingButNotEnforced"
+
+  validation {
+    condition     = contains(["enabledForReportingButNotEnforced", "enabled", "disabled"], var.estado_acceso_condicional)
+    error_message = "Valores válidos: enabledForReportingButNotEnforced, enabled o disabled."
+  }
 }

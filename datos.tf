@@ -62,8 +62,8 @@ resource "azurerm_mssql_server" "erp" {
   tags                          = var.etiquetas
 
   azuread_administrator {
-    login_username              = var.sql_admin.login
-    object_id                   = var.sql_admin.object_id
+    login_username              = azuread_group.grupo["sql-admins"].display_name
+    object_id                   = azuread_group.grupo["sql-admins"].object_id
     azuread_authentication_only = true # sin usuarios ni contraseñas SQL
   }
 

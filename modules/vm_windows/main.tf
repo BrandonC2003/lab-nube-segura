@@ -56,6 +56,13 @@ resource "azurerm_windows_virtual_machine" "this" {
   boot_diagnostics {} # habilita la consola serie
 }
 
+locals {
+  script_completo = var.script_inicio == null ? null : join("\n", concat(
+    [for nombre, valor in var.variables_script : format("$%s = '%s'", nombre, valor)],
+    [var.script_inicio]
+  ))
+}
+
 resource "azurerm_virtual_machine_extension" "script_inicio" {
   count = var.script_inicio == null ? 0 : 1
 
@@ -68,6 +75,6 @@ resource "azurerm_virtual_machine_extension" "script_inicio" {
 
   # protected_settings se almacena cifrado y no se expone en el portal
   protected_settings = jsonencode({
-    commandToExecute = "powershell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(var.script_inicio, "UTF-16LE")}"
+    commandToExecute = "powershell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(local.script_completo, "UTF-16LE")}"
   })
 }
