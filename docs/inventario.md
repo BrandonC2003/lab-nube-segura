@@ -13,23 +13,54 @@ El laboratorio tiene dos modos:
 
 ## 1. Arquitectura general
 
-```
-                          Internet
-                             │ HTTPS 443
-                 ┌───────────▼────────────┐
-                 │ Application Gateway    │  WAF_v2 (Prevention, DRS 2.1)
-                 │ snet-appgw 10.10.2.0/24│
-                 └───────────┬────────────┘
-                             │ UDR 10.20.0.0/16
-┌──────────────┐   IPsec  ┌──▼─────────────────────┐        ┌──────────────────────────┐
-│ Sede simulada│◄════════►│ VNet hub 10.10.0.0/16  │peering │ VNet cargas 10.20.0.0/16 │
-│192.168.0.0/16│  IKEv2   │ VPN Gateway VpnGw1AZ   ├───────►│ snet-apps     web01/erp01│
-│ router       │          │ Azure Firewall Premium │        │ snet-datos    PE de SQL  │
-│ strongSwan   │          │ (IDPS + TI en Deny)    │        │ snet-gestion  jump01     │
-└──────────────┘          └────────────────────────┘        │ snet-seguridad PE de KV  │
-                                                            └──────────────────────────┘
-Empleado remoto ── Entra ID (MFA, acceso condicional) ── App Proxy ── conector en vm-erp01
-Servicios compartidos: Log Analytics + Sentinel, Key Vault (CMK), Recovery Services vault
+```mermaid
+flowchart LR
+    internet(("Internet"))
+    remoto["Empleado remoto"]
+
+    subgraph entra["Microsoft Entra ID"]
+        ca["MFA y acceso condicional<br/>CA01–CA06, PIM"]
+        appproxy["App Proxy"]
+    end
+
+    subgraph sede["Sede simulada · vnet-proto-sede 192.168.0.0/16"]
+        gw["vm-gw-sede 192.168.0.4<br/>strongSwan"]
+        admin01["vm-admin01<br/>vlan-administrativa"]
+        srv01["vm-srv01<br/>vlan-servidores"]
+        dc01["vm-dc01<br/>vlan-identidad · lab.local"]
+    end
+
+    subgraph hub["vnet-proto-hub 10.10.0.0/16"]
+        appgw["Application Gateway WAF_v2<br/>snet-appgw 10.10.2.0/24"]
+        vpngw["VPN Gateway VpnGw1AZ<br/>GatewaySubnet"]
+        fw["Azure Firewall Premium<br/>10.10.0.4 · IDPS y TI en Deny"]
+    end
+
+    subgraph cargas["vnet-proto-cargas 10.20.0.0/16"]
+        web01["vm-web01 10.20.1.10<br/>nginx + Juice Shop"]
+        erp01["vm-erp01 10.20.1.20<br/>IIS + conector"]
+        jump01["vm-jump01 10.20.3.10<br/>snet-gestion"]
+        pesql["PE de Azure SQL<br/>snet-datos"]
+        pekv["PE de Key Vault<br/>snet-seguridad"]
+    end
+
+    subgraph compartidos["Servicios compartidos"]
+        sentinel["Log Analytics + Sentinel"]
+        kv["Key Vault (CMK)"]
+        sql["Azure SQL · TDE CMK"]
+        rsv["Recovery Services vault"]
+    end
+
+    internet -->|"HTTPS 443"| appgw
+    appgw -->|"UDR 10.20.0.0/16"| fw
+    admin01 & srv01 & dc01 --> gw
+    gw <==>|"IPsec IKEv2"| vpngw
+    vpngw -->|"UDR 10.20.0.0/16"| fw
+    fw -->|"peering"| web01 & erp01 & jump01 & pesql & pekv
+    pesql -.- sql
+    pekv -.- kv
+    remoto --> ca --> appproxy
+    appproxy <-.->|"conector saliente"| erp01
 ```
 
 Todo el tráfico entre zonas (sede ↔ spoke, App Gateway ↔ spoke, apps/gestión ↔ datos, spoke → Internet) atraviesa el Firewall cuando el perímetro está activo.
