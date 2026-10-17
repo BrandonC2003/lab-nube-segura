@@ -56,8 +56,9 @@ resource "azurerm_resource_group_template_deployment" "playbook" {
             parameters = {
               "$connections" = { type = "Object", defaultValue = {} }
             }
+            # Sentinel identifica el disparador de incidentes por este nombre
             triggers = {
-              Incidente_de_Sentinel = {
+              Microsoft_Sentinel_incident = {
                 type = "ApiConnectionWebhook"
                 inputs = {
                   host = { connection = { name = "@parameters('$connections')['azuresentinel']['connectionId']" } }
