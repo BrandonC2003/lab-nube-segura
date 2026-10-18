@@ -14,7 +14,7 @@ RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RG_CORE="rg-proto-core"
 RG_PERIMETRO="rg-proto-perimetro"
 RG_SEDE="rg-proto-sede"
-UBICACION="eastus"
+UBICACION_SQL="centralus"
 
 tf() { terraform -chdir="$RAIZ" "$@"; }
 titulo() { printf '\n== %s\n' "$1"; }
@@ -124,7 +124,7 @@ limpiar_respaldos() {
 limpiar_ltr_sql() {
   # Las copias de retención a largo plazo sobreviven al borrado del servidor y se siguen cobrando
   local copias
-  copias="$(az sql db ltr-backup list -l "$UBICACION" -o json 2>/dev/null || echo '[]')"
+  copias="$(az sql db ltr-backup list -l "$UBICACION_SQL" -o json 2>/dev/null || echo '[]')"
   python3 -c '
 import json, sys
 for c in json.loads(sys.argv[1]):
@@ -132,7 +132,7 @@ for c in json.loads(sys.argv[1]):
         print(c["serverName"], c["databaseName"], c["name"], sep="\t")
 ' "$copias" | while IFS=$'\t' read -r servidor base nombre; do
     echo "  Eliminando copia LTR: $servidor/$base/$nombre"
-    az sql db ltr-backup delete -l "$UBICACION" -s "$servidor" -d "$base" -n "$nombre" --yes -o none
+    az sql db ltr-backup delete -l "$UBICACION_SQL" -s "$servidor" -d "$base" -n "$nombre" --yes -o none
   done
 }
 

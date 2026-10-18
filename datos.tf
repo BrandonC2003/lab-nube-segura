@@ -52,9 +52,11 @@ resource "azurerm_key_vault_key" "tde" {
 }
 
 # ================= AZURE SQL =================
+# En otra región por restricción de la suscripción; el acceso es solo por el punto de
+# conexión privado de snet-datos, así que para las cargas de trabajo sigue siendo local.
 resource "azurerm_mssql_server" "erp" {
   name                          = "sql-${var.prefijo}-${local.sufijo}"
-  location                      = var.ubicacion
+  location                      = var.ubicacion_sql
   resource_group_name           = local.rg_core
   version                       = "12.0"
   minimum_tls_version           = "1.2"

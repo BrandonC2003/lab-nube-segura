@@ -269,6 +269,7 @@ Tamaños: serie F v7 de 1 vCPU (`Standard_F1als_v7`, 2 GB, para Linux; `Standard
 - Roles: Key Vault Administrator (equipo), Key Vault Crypto Service Encryption User (SQL), Key Vault Secrets User (identidad del App Gateway).
 
 ### 5.2 Azure SQL — `sql-proto-<sufijo>` / `sqldb-erp`
+- Región **centralus** (la suscripción de prueba restringe SQL en eastus). El acceso es solo por el punto de conexión privado de snet-datos (eastus).
 - Solo autenticación de Entra ID; administrador: grupo `grp-sql-admins`.
 - Acceso público deshabilitado; punto de conexión privado en snet-datos; TLS mínimo 1.2.
 - TDE con la clave de Key Vault (CMK) y rotación automática.
@@ -454,3 +455,4 @@ Consulta guardada: **V9 - Fuentes con datos en las últimas 24 h**.
 - Las contraseñas de las cuentas de emergencia se custodian en Key Vault (en producción: resguardo físico).
 - El Firewall y el VPN Gateway están en el grupo de recursos de la VNet hub.
 - La restauración de la base de datos (V10) crea una base nueva en el mismo servidor.
+- Azure SQL está en centralus y no en eastus (restricción de la suscripción de prueba); se accede igual por el punto de conexión privado.

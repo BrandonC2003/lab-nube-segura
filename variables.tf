@@ -15,6 +15,12 @@ variable "ubicacion_sede" {
   default     = "eastus2"
 }
 
+variable "ubicacion_sql" {
+  description = "Región del servidor Azure SQL (la suscripción de prueba restringe SQL en eastus); se accede por el punto de conexión privado de snet-datos"
+  type        = string
+  default     = "centralus"
+}
+
 variable "tamano_vm_linux" {
   description = "Tamaño de las VMs Linux"
   type        = string
