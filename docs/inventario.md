@@ -1,6 +1,6 @@
 # Inventario del prototipo de factibilidad
 
-Detalle de los recursos que despliega el código Terraform de este repositorio en Microsoft Azure (región `eastus`). Los nombres usan el prefijo `proto`; `<sufijo>` es una cadena aleatoria de 5 caracteres que garantiza nombres únicos en Azure.
+Detalle de los recursos que despliega el código Terraform de este repositorio en Microsoft Azure: la nube en la región `eastus` y la sede simulada en `eastus2`. Los nombres usan el prefijo `proto`; `<sufijo>` es una cadena aleatoria de 5 caracteres que garantiza nombres únicos en Azure.
 
 El laboratorio tiene dos modos:
 
@@ -121,7 +121,9 @@ Cada subred tiene su NSG (`nsg-<subred>`) con una regla final **denegar-resto-vn
 
 Peering hub ↔ cargas con tráfico reenviado permitido; el spoke usa el VPN Gateway del hub (`use_remote_gateways`) solo cuando el perímetro está activo.
 
-### 3.3 VNet de la sede simulada — `vnet-proto-sede` (192.168.0.0/16)
+### 3.3 VNet de la sede simulada — `vnet-proto-sede` (192.168.0.0/16, región eastus2)
+
+La sede está en otra región: el túnel IPsec cruza Internet, como entre una oficina y la nube. Además, reparte las VMs entre dos regiones dentro de la cuota de 4 vCPU por región de la suscripción.
 
 | Subred | Rango | Contenido |
 |---|---|---|
@@ -170,16 +172,16 @@ Peering hub ↔ cargas con tráfico reenviado permitido; el spoke usa el VPN Gat
 
 ## 4. Equipos (máquinas virtuales)
 
-Todas las VMs: IP privada estática, disco `StandardSSD_LRS`, identidad administrada del sistema, diagnóstico de arranque (consola serie) y **Azure Monitor Agent**. Las Linux usan Ubuntu 24.04 LTS con autenticación solo por llave SSH (`~/.ssh/lab_azure`) y usuario `azureadmin`.
+Todas las VMs: IP privada estática, disco `StandardSSD_LRS` con controlador NVMe, **apagado automático diario a las 23:00** (hora de El Salvador), identidad administrada del sistema, diagnóstico de arranque (consola serie) y **Azure Monitor Agent**. Las Linux usan Ubuntu 24.04 LTS con autenticación solo por llave SSH (`~/.ssh/lab_azure`) y usuario `azureadmin`.
 
-Total: 9 vCPU (verificar la cuota con `az vm list-usage -l eastus -o table`).
+Tamaños: serie F v7 de 1 vCPU (`Standard_F1als_v7`, 2 GB, para Linux; `Standard_F1as_v7`, 4 GB, para Windows), los disponibles para la suscripción de prueba. Total: 3 vCPU en eastus y 4 vCPU en eastus2 (cuota de 4 por región).
 
 ### 4.1 Spoke de cargas de trabajo (`rg-proto-core`)
 
 #### vm-web01 — Aplicación web
 | Atributo | Valor |
 |---|---|
-| Sistema / tamaño | Ubuntu 24.04, `Standard_B1ms` (1 vCPU, 2 GB) |
+| Sistema / tamaño | Ubuntu 24.04, `Standard_F1als_v7` (1 vCPU, 2 GB) |
 | Red | snet-apps, 10.20.1.10, sin IP pública |
 | Servicios | **OWASP Juice Shop** (Docker, solo en 127.0.0.1:3000) detrás de **nginx** con TLS 1.2/1.3 en el puerto 443 |
 | Certificado | Firmado por la CA interna; CN `web01.interno.lab`, SAN `app.interno.lab` e IP 10.20.1.10 |
@@ -190,7 +192,7 @@ Total: 9 vCPU (verificar la cuota con `az vm list-usage -l eastus -o table`).
 #### vm-erp01 — ERP simulado
 | Atributo | Valor |
 |---|---|
-| Sistema / tamaño | Windows Server 2022 Datacenter Azure Edition, `Standard_B2s` (2 vCPU, 4 GB) |
+| Sistema / tamaño | Windows Server 2022 Datacenter Azure Edition, `Standard_F1as_v7` (1 vCPU, 4 GB) |
 | Red | snet-apps, 10.20.1.20, sin IP pública |
 | Servicios | **IIS** con la página "ERP simulado"; ICMP de entrada permitido; HTTP/2 de WinHTTP deshabilitado (requisito del conector) |
 | Instalación manual | **Conector de red privada de Entra** (App Proxy) |
@@ -203,18 +205,18 @@ Total: 9 vCPU (verificar la cuota con `az vm list-usage -l eastus -o table`).
 #### vm-jump01 — Servidor de salto
 | Atributo | Valor |
 |---|---|
-| Sistema / tamaño | Ubuntu 24.04, `Standard_B1s` (1 vCPU, 1 GB) |
+| Sistema / tamaño | Ubuntu 24.04, `Standard_F1als_v7` (1 vCPU, 2 GB) |
 | Red | snet-gestion, 10.20.3.10, sin IP pública |
 | Servicios | Herramientas: curl, nmap, netcat, dnsutils, traceroute |
 | Función | Único punto de administración hacia snet-apps (22/3389) y snet-datos (1433) |
 | Registros | Syslog |
 
-### 4.2 Sede simulada (`rg-proto-sede`)
+### 4.2 Sede simulada (`rg-proto-sede`, región eastus2)
 
 #### vm-gw-sede — Router de borde
 | Atributo | Valor |
 |---|---|
-| Sistema / tamaño | Ubuntu 24.04, `Standard_B1s` |
+| Sistema / tamaño | Ubuntu 24.04, `Standard_F1als_v7` |
 | Red | snet-borde, 192.168.0.4, **IP pública** (`pip-proto-router-sede`), reenvío IP habilitado |
 | Servicios | **strongSwan** (swanctl): IKEv2, `aes256-sha256-modp2048`, PSK, DPD 30 s, reinicio automático del túnel; tcpdump |
 | Selectores de tráfico | Local 192.168.0.0/16; remoto 10.10.0.0/16 y 10.20.0.0/16 |
@@ -224,7 +226,7 @@ Total: 9 vCPU (verificar la cuota con `az vm list-usage -l eastus -o table`).
 #### vm-admin01 — Equipo de la VLAN administrativa
 | Atributo | Valor |
 |---|---|
-| Sistema / tamaño | Ubuntu 24.04, `Standard_B1s` |
+| Sistema / tamaño | Ubuntu 24.04, `Standard_F1als_v7` |
 | Red | vlan-administrativa, 192.168.10.10 |
 | Servicios | Herramientas de red (curl, nmap, netcat, dnsutils, traceroute) |
 | Función | Origen "no autorizado" hacia la zona de datos (V6); cliente de la prueba de reversión (V11) |
@@ -232,7 +234,7 @@ Total: 9 vCPU (verificar la cuota con `az vm list-usage -l eastus -o table`).
 #### vm-srv01 — Servidor local
 | Atributo | Valor |
 |---|---|
-| Sistema / tamaño | Ubuntu 24.04, `Standard_B1s` |
+| Sistema / tamaño | Ubuntu 24.04, `Standard_F1als_v7` |
 | Red | vlan-servidores, 192.168.30.10 |
 | Servicios | Herramientas de red; **nginx** con TLS (certificado de la CA interna para `app.interno.lab`) que sirve la página "Aplicación web - servicio local (sede)" |
 | Función | Origen de la prueba de conectividad híbrida (V2); servicio local del plan de vuelta atrás (V11) |
@@ -240,12 +242,12 @@ Total: 9 vCPU (verificar la cuota con `az vm list-usage -l eastus -o table`).
 #### vm-dc01 — Controlador de dominio
 | Atributo | Valor |
 |---|---|
-| Sistema / tamaño | Windows Server 2022 Datacenter Azure Edition, `Standard_B2s` |
+| Sistema / tamaño | Windows Server 2022 Datacenter Azure Edition, `Standard_F1as_v7` |
 | Red | vlan-identidad, 192.168.40.10 |
 | Servicios | **AD DS** con el bosque `lab.local` (NetBIOS `LAB`) y **DNS** con reenviador a 168.63.129.16 |
 | Instalación manual | **Microsoft Entra Cloud Sync** (sincronización de hash de contraseñas) |
 | Credenciales | Administrador (`vm-dc01-azureadmin`) y DSRM (`vm-dc01-dsrm`) en Key Vault |
-| Respaldo | `pol-diaria-30d` |
+| Respaldo | Estado del sistema con el **agente MARS** (diario, 30 días) en `rsv-proto-<sufijo>` |
 | Registros | SecurityEvent |
 
 ---
@@ -404,8 +406,8 @@ Consulta guardada: **V9 - Fuentes con datos en las últimas 24 h**.
 | Política | Programación | Retención | VMs | RPO |
 |---|---|---|---|---|
 | `pol-mejorada-4h` (V2) | Cada 4 h | Diarias 30 días; mensuales 12 meses; instantáneas 7 días | vm-erp01, vm-web01 | 4 h |
-| `pol-diaria-30d` (V2) | Diaria 02:00 | Diarias 30 días | vm-dc01 | 24 h |
 
+- Controlador de dominio: estado del sistema con el agente MARS (diario, retención de 30 días, RPO de 24 h). Una bóveda solo protege VMs de su región, y MARS no tiene esa limitación.
 - Base de datos: copias automáticas de Azure SQL (PITR de 35 días, RPO de 15 min) y LTR mensual de 12 meses.
 - Entorno de restauración: `vnet-proto-aislada` y la cuenta de transición `stprotorest<sufijo>`.
 
@@ -428,6 +430,7 @@ Consulta guardada: **V9 - Fuentes con datos en las últimas 24 h**.
 | Instalar y registrar el conector de red privada en vm-erp01 | Entra → Global Secure Access → Conectores | App Proxy |
 | Publicar el ERP (`http://erp01.interno.lab`) con preautenticación de Entra ID y asignar grp-finanzas y grp-comercial-remoto | Entra → Aplicaciones empresariales | V3 |
 | Instalar Microsoft Entra Cloud Sync en vm-dc01 | vm-dc01 | Identidad híbrida |
+| Instalar el agente MARS en vm-dc01 y programar la copia diaria del estado del sistema (30 días) | vm-dc01 y bóveda `rsv-proto-<sufijo>` | Respaldo del DC (Tabla 19) |
 | Agregar el envío de correo al playbook (conector Office 365) | Diseñador de Logic Apps | V9 (notificación) |
 | Alerta de presupuesto | Cost Management | Control de costos |
 
@@ -439,7 +442,8 @@ Consulta guardada: **V9 - Fuentes con datos en las últimas 24 h**.
 - La PSK de la VPN viaja en el `custom_data` del router.
 - El ERP es simulado (IIS) y comparte VM con el conector de App Proxy.
 - Una VM de aplicación web (el documento indica dos detrás del App Gateway).
-- Un controlador de dominio, respaldado como VM completa (el documento indica dos con el agente MARS).
+- Un controlador de dominio (el documento indica dos).
+- VMs de 1 vCPU de la serie F v7 en lugar de los tamaños B (restricción de la suscripción de prueba), con la sede en otra región por la cuota de 4 vCPU por región.
 - Certificados autofirmados con una CA interna generada por Terraform.
 - Firewall, App Gateway y VMs sin zonas de disponibilidad (solo el VPN Gateway es zonal); App Gateway con una instancia fija.
 - Key Vault con acceso público restringido a las IPs del equipo.

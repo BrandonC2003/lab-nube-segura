@@ -444,7 +444,7 @@ Las VMs del laboratorio salen a Internet desde IPs de Azure en Estados Unidos. C
 
 ## V10 — Respaldo y restauración
 
-**Requisitos:** al menos un punto de recuperación de vm-erp01; cuota de vCPU disponible para una VM adicional `Standard_B2s` (apagar temporalmente otras VMs con `az vm deallocate` si hace falta). Objetivos: ERP con RTO 4 h y RPO 4 h; base de datos con RTO 2 h y RPO 15 min.
+**Requisitos:** al menos un punto de recuperación de vm-erp01; cuota de vCPU en eastus para una VM adicional de 1 vCPU (`Standard_F1as_v7`; con 3 de 4 vCPU en uso, la cuota alcanza). Objetivos: ERP con RTO 4 h y RPO 4 h; base de datos con RTO 2 h y RPO 15 min.
 
 **Pasos**
 
