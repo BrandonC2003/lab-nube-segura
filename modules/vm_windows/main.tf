@@ -31,6 +31,7 @@ resource "azurerm_windows_virtual_machine" "this" {
   admin_username        = var.usuario_admin
   admin_password        = random_password.admin.result
   network_interface_ids = [azurerm_network_interface.this.id]
+  disk_controller_type  = var.controlador_disco
   tags                  = var.etiquetas
 
   # Parches gestionados por Azure: alimenta el indicador de parches (Tabla 10)
@@ -77,4 +78,20 @@ resource "azurerm_virtual_machine_extension" "script_inicio" {
   protected_settings = jsonencode({
     commandToExecute = "powershell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(local.script_completo, "UTF-16LE")}"
   })
+}
+
+# Apagado diario: evita que una VM olvidada consuma crédito toda la noche
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "this" {
+  count = var.hora_apagado == null ? 0 : 1
+
+  virtual_machine_id    = azurerm_windows_virtual_machine.this.id
+  location              = var.ubicacion
+  enabled               = true
+  daily_recurrence_time = var.hora_apagado
+  timezone              = var.zona_horaria
+  tags                  = var.etiquetas
+
+  notification_settings {
+    enabled = false
+  }
 }

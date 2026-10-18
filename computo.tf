@@ -59,7 +59,8 @@ module "vm_web01" {
   ubicacion         = var.ubicacion
   subnet_id         = module.vnet_cargas.subredes["snet-apps"]
   ip_privada        = local.ip_web01
-  tamano            = "Standard_B1ms" # Juice Shop necesita ~1 GB de RAM
+  tamano            = var.tamano_vm_linux
+  hora_apagado      = var.hora_apagado_vms
   ssh_clave_publica = local.ssh_clave
   etiquetas         = var.etiquetas
 
@@ -78,6 +79,8 @@ module "vm_jump01" {
   ubicacion         = var.ubicacion
   subnet_id         = module.vnet_cargas.subredes["snet-gestion"]
   ip_privada        = local.ip_jump01
+  tamano            = var.tamano_vm_linux
+  hora_apagado      = var.hora_apagado_vms
   ssh_clave_publica = local.ssh_clave
   cloud_init        = file("${path.module}/cloud-init/herramientas.yaml")
   etiquetas         = var.etiquetas
@@ -92,6 +95,8 @@ module "vm_erp01" {
   ubicacion      = var.ubicacion
   subnet_id      = module.vnet_cargas.subredes["snet-apps"]
   ip_privada     = local.ip_erp01
+  tamano         = var.tamano_vm_windows
+  hora_apagado   = var.hora_apagado_vms
   script_inicio  = file("${path.module}/scripts/erp-inicio.ps1")
   etiquetas      = var.etiquetas
 }

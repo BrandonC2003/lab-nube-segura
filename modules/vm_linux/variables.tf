@@ -22,7 +22,7 @@ variable "ip_privada" {
 
 variable "tamano" {
   type    = string
-  default = "Standard_B1s"
+  default = "Standard_F1als_v7"
 }
 
 variable "usuario_admin" {
@@ -51,6 +51,24 @@ variable "cloud_init" {
   description = "Configuración cloud-init en texto plano (null = ninguna)"
   type        = string
   default     = null
+}
+
+variable "controlador_disco" {
+  description = "Controlador de disco: NVMe (obligatorio en tamaños v6/v7) o SCSI"
+  type        = string
+  default     = "NVMe"
+}
+
+variable "hora_apagado" {
+  description = "Hora de apagado automático diario en formato HHMM (null = sin apagado)"
+  type        = string
+  default     = null
+}
+
+variable "zona_horaria" {
+  description = "Zona horaria del apagado automático"
+  type        = string
+  default     = "Central America Standard Time"
 }
 
 variable "etiquetas" {

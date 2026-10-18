@@ -37,29 +37,13 @@ resource "azurerm_backup_policy_vm" "cada_4h" {
   }
 }
 
-# Controlador de dominio: RPO 24 h, retención de 30 días
-resource "azurerm_backup_policy_vm" "diaria_30d" {
-  name                = "pol-diaria-30d"
-  resource_group_name = local.rg_core
-  recovery_vault_name = azurerm_recovery_services_vault.principal.name
-  policy_type         = "V2"
-  timezone            = "Central America Standard Time"
-
-  backup {
-    frequency = "Daily"
-    time      = "02:00"
-  }
-
-  retention_daily {
-    count = 30
-  }
-}
+# Controlador de dominio (sede, otra región): RPO 24 h. Se respalda el estado del sistema
+# con el agente MARS en esta bóveda (diario, 30 días), configurado en el propio servidor.
 
 locals {
   vms_respaldadas = {
     erp01 = { id = module.vm_erp01.id, politica = azurerm_backup_policy_vm.cada_4h.id }
     web01 = { id = module.vm_web01.id, politica = azurerm_backup_policy_vm.cada_4h.id }
-    dc01  = { id = module.vm_dc01.id, politica = azurerm_backup_policy_vm.diaria_30d.id }
   }
 }
 

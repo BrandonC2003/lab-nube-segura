@@ -366,7 +366,9 @@ module "vm_dc01" {
 
   nombre           = "vm-dc01"
   grupo_recursos   = local.rg_sede
-  ubicacion        = var.ubicacion
+  ubicacion        = var.ubicacion_sede
+  tamano           = var.tamano_vm_windows
+  hora_apagado     = var.hora_apagado_vms
   subnet_id        = module.vnet_sede.subredes["vlan-identidad"]
   ip_privada       = "192.168.40.10"
   script_inicio    = file("${path.module}/scripts/dc-inicio.ps1")

@@ -9,6 +9,30 @@ variable "ubicacion" {
   default     = "eastus"
 }
 
+variable "ubicacion_sede" {
+  description = "Región de la sede simulada (separada de la nube por la cuota de vCPU por región)"
+  type        = string
+  default     = "eastus2"
+}
+
+variable "tamano_vm_linux" {
+  description = "Tamaño de las VMs Linux"
+  type        = string
+  default     = "Standard_F1als_v7"
+}
+
+variable "tamano_vm_windows" {
+  description = "Tamaño de las VMs Windows"
+  type        = string
+  default     = "Standard_F1as_v7"
+}
+
+variable "hora_apagado_vms" {
+  description = "Hora de apagado automático diario de las VMs (HHMM, hora de El Salvador; null = desactivado)"
+  type        = string
+  default     = "2300"
+}
+
 variable "prefijo" {
   description = "Prefijo para nombrar los recursos"
   type        = string

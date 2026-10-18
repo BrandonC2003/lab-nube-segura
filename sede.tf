@@ -13,7 +13,7 @@ resource "random_password" "vpn_psk" {
 # ---------- IP pública del router de la sede ----------
 resource "azurerm_public_ip" "router_sede" {
   name                = "pip-${var.prefijo}-router-sede"
-  location            = var.ubicacion
+  location            = var.ubicacion_sede
   resource_group_name = local.rg_sede
   allocation_method   = "Static"
   sku                 = "Standard"
@@ -21,12 +21,13 @@ resource "azurerm_public_ip" "router_sede" {
 }
 
 # ---------- Red de la sede: 192.168.0.0/16 ----------
+# En otra región: el túnel IPsec cruza Internet, como entre una oficina y la nube
 module "vnet_sede" {
   source = "./modules/vnet"
 
   nombre              = "vnet-${var.prefijo}-sede"
   grupo_recursos      = local.rg_sede
-  ubicacion           = var.ubicacion
+  ubicacion           = var.ubicacion_sede
   espacio_direcciones = [local.rango_sede]
   etiquetas           = var.etiquetas
 
@@ -48,7 +49,7 @@ module "vnet_sede" {
 # ---------- Rutas: las VLAN salen hacia Azure por el router ----------
 resource "azurerm_route_table" "sede" {
   name                          = "rt-${var.prefijo}-sede-vlans"
-  location                      = var.ubicacion
+  location                      = var.ubicacion_sede
   resource_group_name           = local.rg_sede
   bgp_route_propagation_enabled = false
   tags                          = var.etiquetas
@@ -81,11 +82,13 @@ module "vm_router_sede" {
 
   nombre            = "vm-gw-sede"
   grupo_recursos    = local.rg_sede
-  ubicacion         = var.ubicacion
+  ubicacion         = var.ubicacion_sede
   subnet_id         = module.vnet_sede.subredes["snet-borde"]
   ip_privada        = local.ip_router_sede
   ip_publica_id     = azurerm_public_ip.router_sede.id
   reenvio_ip        = true
+  tamano            = var.tamano_vm_linux
+  hora_apagado      = var.hora_apagado_vms
   ssh_clave_publica = local.ssh_clave
   etiquetas         = var.etiquetas
 
@@ -149,9 +152,11 @@ module "vm_sede" {
 
   nombre            = each.key
   grupo_recursos    = local.rg_sede
-  ubicacion         = var.ubicacion
+  ubicacion         = var.ubicacion_sede
   subnet_id         = module.vnet_sede.subredes[each.value.subred]
   ip_privada        = each.value.ip
+  tamano            = var.tamano_vm_linux
+  hora_apagado      = var.hora_apagado_vms
   ssh_clave_publica = local.ssh_clave
   cloud_init        = local.cloud_init_sede[each.key]
   etiquetas         = var.etiquetas

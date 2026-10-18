@@ -23,6 +23,7 @@ resource "azurerm_linux_virtual_machine" "this" {
   disable_password_authentication = true
   network_interface_ids           = [azurerm_network_interface.this.id]
   custom_data                     = var.cloud_init == null ? null : base64encode(var.cloud_init)
+  disk_controller_type            = var.controlador_disco
   tags                            = var.etiquetas
 
   admin_ssh_key {
@@ -47,4 +48,19 @@ resource "azurerm_linux_virtual_machine" "this" {
   }
 
   boot_diagnostics {} # habilita la consola serie
+}
+# Apagado diario: evita que una VM olvidada consuma crédito toda la noche
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "this" {
+  count = var.hora_apagado == null ? 0 : 1
+
+  virtual_machine_id    = azurerm_linux_virtual_machine.this.id
+  location              = var.ubicacion
+  enabled               = true
+  daily_recurrence_time = var.hora_apagado
+  timezone              = var.zona_horaria
+  tags                  = var.etiquetas
+
+  notification_settings {
+    enabled = false
+  }
 }
