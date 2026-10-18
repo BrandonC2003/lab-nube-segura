@@ -71,6 +71,10 @@ module "vnet_cargas" {
     snet-seguridad = {
       prefijo            = "10.20.4.0/24"
       endpoints_privados = true
+      # Solo NSG: App Gateway llega a Key Vault directo por el peering (ruta /32 del punto de conexión)
+      # y no a través de Azure Firewall; por ese camino no completaba la lectura del certificado y
+      # el despliegue terminaba en InternalServerError. El NSG sigue limitando el origen.
+      politicas_endpoints = "NetworkSecurityGroupEnabled"
       reglas_nsg = [
         { nombre = "permitir-keyvault-desde-cargas", prioridad = 100, acceso = "Allow", puertos = ["443"], origen = "10.20.0.0/16" },
         { nombre = "permitir-keyvault-desde-appgw", prioridad = 110, acceso = "Allow", puertos = ["443"], origen = "10.10.2.0/24" },

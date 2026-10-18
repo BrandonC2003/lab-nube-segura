@@ -14,7 +14,7 @@ resource "azurerm_subnet" "this" {
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [each.value.prefijo]
 
-  private_endpoint_network_policies = each.value.endpoints_privados ? "Enabled" : "Disabled"
+  private_endpoint_network_policies = each.value.endpoints_privados ? each.value.politicas_endpoints : "Disabled"
 }
 
 locals {

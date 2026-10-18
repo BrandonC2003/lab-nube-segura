@@ -28,6 +28,9 @@ variable "subredes" {
     prefijo            = string
     con_nsg            = optional(bool, true)
     endpoints_privados = optional(bool, false)
+    # Políticas de red de los puntos de conexión privados: "Enabled" (NSG y UDR) o
+    # "NetworkSecurityGroupEnabled" (solo NSG; la ruta /32 del punto de conexión prevalece sobre las UDR)
+    politicas_endpoints = optional(string, "Enabled")
     reglas_nsg = optional(list(object({
       nombre    = string
       prioridad = number

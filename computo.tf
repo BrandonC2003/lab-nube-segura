@@ -125,11 +125,31 @@ module "vm_erp01" {
   hora_apagado   = var.hora_apagado_vms
   script_inicio  = file("${path.module}/scripts/erp-inicio.ps1")
   etiquetas      = var.etiquetas
+}
 
-  variables_script = {
-    CertificadoPem = tls_locally_signed_cert.erp01.cert_pem
-    LlavePem       = tls_private_key.erp01.private_key_pem
+# Enlace HTTPS con el certificado de la CA interna. Run Command admite scripts largos y
+# parámetros protegidos; la extensión del script de inicio limita la línea de comandos a 8191 caracteres.
+resource "azurerm_virtual_machine_run_command" "erp01_https" {
+  name               = "erp01-https"
+  location           = var.ubicacion
+  virtual_machine_id = module.vm_erp01.id
+  tags               = var.etiquetas
+
+  source {
+    script = file("${path.module}/scripts/erp-https.ps1")
   }
+
+  protected_parameter {
+    name  = "CertificadoBase64"
+    value = base64encode(tls_locally_signed_cert.erp01.cert_pem)
+  }
+
+  protected_parameter {
+    name  = "LlaveBase64"
+    value = base64encode(tls_private_key.erp01.private_key_pem)
+  }
+
+  depends_on = [module.vm_erp01] # IIS debe estar instalado por el script de inicio
 }
 
 # Contraseña del administrador local custodiada en Key Vault

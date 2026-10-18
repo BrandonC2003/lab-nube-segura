@@ -362,7 +362,7 @@ Se crean en modo **solo informe** (`estado_acceso_condicional`) y luego se activ
 | Rol | Alcance | Elegible | Política |
 |---|---|---|---|
 | Contributor (Azure) | rg-proto-core | grp-admins-ti (90 días) | Máximo 4 h, justificación y **aprobación** obligatorias |
-| User Administrator (Entra) | Directorio | grp-admins-ti | Se configura en el portal: máximo 4 h, justificación, sin aprobación |
+| User Administrator (Entra) | Directorio | grp-admins-ti (asignación en el portal) | Se configura en el portal: máximo 4 h, justificación, sin aprobación |
 
 ---
 
@@ -425,7 +425,8 @@ Consulta guardada: **V9 - Fuentes con datos en las últimas 24 h**.
 | Desactivar los valores predeterminados de seguridad | Entra ID → Propiedades | Acceso condicional |
 | Asignar Global Administrator al operador de Terraform | Entra ID → Roles | Capa de identidad y diagnóstico de Entra |
 | Métodos de autenticación: SMS y voz desactivados; Authenticator y FIDO2/passkey activados | Entra ID → Métodos de autenticación | V4 |
-| Configuración de PIM de User Administrator (4 h, justificación) | PIM → Roles de Entra ID | V5 |
+| Incorporar el inquilino a PIM para recursos de Azure (abrir la sección una vez) | PIM → Recursos de Azure | Política y asignación elegible de Contributor (V5) |
+| Asignar grp-admins-ti como elegible para User Administrator y configurar su política (4 h, justificación) | PIM → Roles de Microsoft Entra | V5 |
 | Registrar passkey o FIDO2 de adminti01/02 y de las cuentas de emergencia | Mi información de seguridad | CA03, V5 |
 | `CREATE USER [vm-erp01] FROM EXTERNAL PROVIDER` | sqlcmd local por túnel SSH a través de jump01 (ver V10 en `validaciones.md`) | Conexión del ERP a SQL |
 | Instalar y registrar el conector de red privada en vm-erp01 | Entra → Global Secure Access → Conectores | App Proxy |

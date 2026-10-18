@@ -233,7 +233,7 @@ resource "azuread_conditional_access_policy" "ca04_solo_el_salvador" {
 
     locations {
       included_locations = ["All"]
-      excluded_locations = [azuread_named_location.el_salvador.id]
+      excluded_locations = [azuread_named_location.el_salvador.object_id]
     }
   }
 
@@ -295,15 +295,11 @@ resource "azuread_conditional_access_policy" "ca06_plataformas_aprobadas" {
 }
 
 # ================= PIM: ROLES DE ENTRA ID =================
+# La asignación elegible de User Administrator a grp-admins-ti se hace en el portal
+# (inventario, sección 10): el token de la CLI de Azure no incluye el permiso
+# RoleEligibilitySchedule.ReadWrite.Directory que exige la API de Graph.
 resource "azuread_directory_role" "user_admin" {
   display_name = "User Administrator"
-}
-
-resource "azuread_directory_role_eligibility_schedule_request" "admins_ti_user_admin" {
-  role_definition_id = azuread_directory_role.user_admin.template_id
-  principal_id       = azuread_group.grupo["admins-ti"].object_id
-  directory_scope_id = "/"
-  justification      = "Elegibilidad de administradores de TI; activación bajo demanda"
 }
 
 # ================= PIM: ROLES DE AZURE (prueba V5) =================
