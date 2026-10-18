@@ -72,6 +72,11 @@ resource "azurerm_mssql_server" "erp" {
   identity {
     type = "SystemAssigned" # identidad con la que SQL leerá la clave de Key Vault
   }
+
+  # La clave TDE la administra azurerm_mssql_server_transparent_data_encryption
+  lifecycle {
+    ignore_changes = [transparent_data_encryption_key_vault_key_id]
+  }
 }
 
 resource "azurerm_mssql_database" "erp" {

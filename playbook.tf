@@ -21,8 +21,8 @@ resource "azurerm_resource_group_template_deployment" "playbook" {
     "$schema"      = "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
     contentVersion = "1.0.0.0"
     parameters = {
-      nombre    = { type = "string" }
-      ubicacion = { type = "string" }
+      nombre    = { type = "String" }
+      ubicacion = { type = "String" }
     }
     variables = {
       conexion = "[concat('azuresentinel-', parameters('nombre'))]"
@@ -130,8 +130,8 @@ resource "azurerm_resource_group_template_deployment" "playbook" {
       }
     ]
     outputs = {
-      id           = { type = "string", value = "[resourceId('Microsoft.Logic/workflows', parameters('nombre'))]" }
-      principal_id = { type = "string", value = "[reference(resourceId('Microsoft.Logic/workflows', parameters('nombre')), '2019-05-01', 'full').identity.principalId]" }
+      id           = { type = "String", value = "[resourceId('Microsoft.Logic/workflows', parameters('nombre'))]" }
+      principal_id = { type = "String", value = "[reference(resourceId('Microsoft.Logic/workflows', parameters('nombre')), '2019-05-01', 'full').identity.principalId]" }
     }
   })
 }
