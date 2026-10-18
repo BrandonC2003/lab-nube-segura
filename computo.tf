@@ -50,6 +50,32 @@ resource "tls_locally_signed_cert" "web01" {
   allowed_uses = ["digital_signature", "key_encipherment", "server_auth"]
 }
 
+# ================= CERTIFICADO DE ERP01 =================
+resource "tls_private_key" "erp01" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "tls_cert_request" "erp01" {
+  private_key_pem = tls_private_key.erp01.private_key_pem
+  dns_names       = ["erp01.interno.lab"]
+  ip_addresses    = [local.ip_erp01]
+
+  subject {
+    common_name  = "erp01.interno.lab"
+    organization = "Prototipo UTEC"
+  }
+}
+
+resource "tls_locally_signed_cert" "erp01" {
+  cert_request_pem      = tls_cert_request.erp01.cert_request_pem
+  ca_private_key_pem    = tls_private_key.ca.private_key_pem
+  ca_cert_pem           = tls_self_signed_cert.ca.cert_pem
+  validity_period_hours = 8760
+
+  allowed_uses = ["digital_signature", "key_encipherment", "server_auth"]
+}
+
 # ================= VM WEB01 (Juice Shop) =================
 module "vm_web01" {
   source = "./modules/vm_linux"
@@ -99,6 +125,11 @@ module "vm_erp01" {
   hora_apagado   = var.hora_apagado_vms
   script_inicio  = file("${path.module}/scripts/erp-inicio.ps1")
   etiquetas      = var.etiquetas
+
+  variables_script = {
+    CertificadoPem = tls_locally_signed_cert.erp01.cert_pem
+    LlavePem       = tls_private_key.erp01.private_key_pem
+  }
 }
 
 # Contraseña del administrador local custodiada en Key Vault

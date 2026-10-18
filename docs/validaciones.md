@@ -151,7 +151,11 @@ Las VMs del laboratorio salen a Internet desde IPs de Azure en Estados Unidos. C
    ```bash
    nmap -Pn -p 22,80,443,1433,3389 10.20.1.10 10.20.1.20 10.20.3.10 <IP_PRIVADA_SQL>
    ```
-   Resultado esperado: 443 abierto en .1.10 y .1.20; 22 y 3389 abiertos en 10.20.3.10; el resto `filtered`.
+   Resultado esperado: 443 abierto en .1.10 y .1.20; 22 abierto en 10.20.3.10 (el Firewall también permite 3389, pero jump01 es Linux y no escucha en ese puerto); el resto `filtered`.
+   Azure Firewall completa el *handshake* TCP en 80 y 443 por su proxy de reglas de aplicación, por lo que `nmap` puede mostrarlos `open` aunque no haya regla. Confirmar a nivel HTTP: una respuesta `HTTP 470` con `Action: Deny. Reason: No rule matched` indica bloqueo:
+   ```bash
+   curl -sk -o /dev/null -w '%{http_code}\n' http://10.20.3.10/     # 470
+   ```
 5. **Caída de una instancia de la puerta de enlace.** El VPN Gateway activo-en espera tiene dos instancias; el *reset* reinicia la activa y fuerza la conmutación a la de reserva.
    - Terminal 1 (vm-srv01), monitoreo continuo:
      ```bash
@@ -397,7 +401,7 @@ Las VMs del laboratorio salen a Internet desde IPs de Azure en Estados Unidos. C
    | where TimeGenerated > ago(1h)
    | project TimeGenerated, SourceIp, DestinationIp, DestinationPort, SignatureId, Description, Action, Severity
    ```
-   Resultado esperado: `SignatureId == 2032081` desde 10.20.3.10 con `Action == "Deny"`.
+   Resultado esperado: `SignatureId == 2032081` con `Action` igual a `Deny` o `drop`. El registro muestra como `SourceIp` la IP de la instancia del Firewall en `AzureFirewallSubnet` (10.10.0.x, tras la SNAT hacia Internet), no la de jump01; la correlación se hace por la hora de la prueba.
 4. Verificar en Sentinel el incidente de la regla **Firma de IDPS detectada en Azure Firewall**.
 
 **Criterio:** alerta y bloqueo registrados.
@@ -417,7 +421,7 @@ Las VMs del laboratorio salen a Internet desde IPs de Azure en Estados Unidos. C
 3. Comparar con la lista esperada: SigninLogs, AuditLogs, AzureActivity, AzureDiagnostics/AuditEvent (Key Vault), AzureDiagnostics/SQLSecurityAuditEvents, Syslog, SecurityEvent, Heartbeat, AZFWNetworkRule, AZFWApplicationRule, AZFWIdpsSignature, AGWAccessLogs y AGWFirewallLogs.
 
 *B. Regla analítica de prueba asociada al playbook (fuerza bruta)*
-4. Registrar la hora de inicio. En una ventana privada, desde El Salvador, intentar 6 veces el inicio de sesión de finanzas01 con una contraseña incorrecta (menos de 10 intentos, para no activar el bloqueo inteligente).
+4. Registrar la hora de inicio. En una ventana privada, desde El Salvador, intentar 6 veces el inicio de sesión de finanzas01 con una contraseña incorrecta (menos de 10 intentos, para no activar el bloqueo inteligente). Si Entra ya bloqueó la cuenta, o la IP de origen tiene mala reputación (por ejemplo, IPs compartidas de proveedores satelitales), los intentos se registran como 50053 en lugar de 50126; la regla cuenta ambos códigos.
 5. Esperar el incidente **Fuerza bruta contra cuentas de Entra ID** (*Sentinel → Incidentes*). Registrar su hora de creación.
 6. Verificar la ejecución del playbook: *Logic Apps → pb-proto-deshabilitar-usuario → Historial de ejecuciones*. Registrar la hora de inicio y de fin, y el comentario agregado al incidente.
 7. Confirmar el efecto:

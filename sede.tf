@@ -37,6 +37,11 @@ module "vnet_sede" {
       reglas_nsg = [
         { nombre = "permitir-ike-desde-azure", prioridad = 100, acceso = "Allow", protocolo = "Udp", puertos = ["500", "4500"], origen = azurerm_public_ip.vpn_gateway.ip_address },
         { nombre = "permitir-ssh-administrador", prioridad = 110, acceso = "Allow", puertos = ["22"], origen = var.ip_admin },
+        # Tráfico de las VLAN que el router reenvía al túnel. snet-borde no tiene las rutas UDR hacia
+        # Azure, así que esos prefijos no forman parte de la etiqueta VirtualNetwork de su NSG.
+        # El filtrado por puerto lo hace Azure Firewall.
+        { nombre = "permitir-reenvio-sede-a-hub", prioridad = 120, acceso = "Allow", protocolo = "*", puertos = ["*"], origen = local.rango_sede, destino = "10.10.0.0/16" },
+        { nombre = "permitir-reenvio-sede-a-cargas", prioridad = 130, acceso = "Allow", protocolo = "*", puertos = ["*"], origen = local.rango_sede, destino = "10.20.0.0/16" },
       ]
     }
     vlan-administrativa = { prefijo = "192.168.10.0/24" }

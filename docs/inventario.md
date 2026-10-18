@@ -133,7 +133,7 @@ La sede está en otra región: el túnel IPsec cruza Internet, como entre una of
 | vlan-servidores | 192.168.30.0/24 | vm-srv01 (.10) |
 | vlan-identidad | 192.168.40.0/24 | vm-dc01 (.10) |
 
-- `nsg-snet-borde`: permite UDP 500/4500 solo desde la IP del VPN Gateway y SSH solo desde la IP del administrador (`ip_admin`).
+- `nsg-snet-borde`: permite UDP 500/4500 solo desde la IP del VPN Gateway, SSH solo desde la IP del administrador (`ip_admin`) y el tráfico de 192.168.0.0/16 que el router reenvía hacia 10.10.0.0/16 y 10.20.0.0/16 (el filtrado por puerto lo hace Azure Firewall).
 - Las VLAN tienen NSG con las reglas predeterminadas de Azure.
 - Tabla de rutas `rt-proto-sede-vlans` en las cuatro VLAN: 10.10.0.0/16 y 10.20.0.0/16 → 192.168.0.4 (router).
 
@@ -194,7 +194,7 @@ Tamaños: serie F v7 de 1 vCPU (`Standard_F1als_v7`, 2 GB, para Linux; `Standard
 |---|---|
 | Sistema / tamaño | Windows Server 2022 Datacenter Azure Edition, `Standard_F1as_v7` (1 vCPU, 4 GB) |
 | Red | snet-apps, 10.20.1.20, sin IP pública |
-| Servicios | **IIS** con la página "ERP simulado"; ICMP de entrada permitido; HTTP/2 de WinHTTP deshabilitado (requisito del conector) |
+| Servicios | **IIS** con la página "ERP simulado" en HTTP (80) y HTTPS (443, certificado de la CA interna para `erp01.interno.lab`); ICMP de entrada permitido; HTTP/2 de WinHTTP deshabilitado (requisito del conector) |
 | Instalación manual | **Conector de red privada de Entra** (App Proxy) |
 | Parches | `AutomaticByPlatform` (orquestación y evaluación de parches de Azure) |
 | Identidad | Identidad administrada usada para conectarse a Azure SQL sin contraseña |
@@ -388,7 +388,7 @@ Se crean en modo **solo informe** (`estado_acceso_condicional`) y luego se activ
 | Inicio de sesión con cuenta de emergencia | Alta | Cualquier registro de emergencia01/02 en SigninLogs |
 | Firma de IDPS detectada en Azure Firewall | Alta | Cualquier registro en AZFWIdpsSignature |
 | Ráfaga de solicitudes bloqueadas por el WAF | Media | ≥ 10 bloqueos de una misma IP |
-| Fuerza bruta contra cuentas de Entra ID | Alta | ≥ 5 errores 50126 para un mismo usuario |
+| Fuerza bruta contra cuentas de Entra ID | Alta | ≥ 5 errores 50126 o 50053 (cuenta bloqueada) para un mismo usuario |
 
 Consulta guardada: **V9 - Fuentes con datos en las últimas 24 h**.
 
@@ -429,7 +429,7 @@ Consulta guardada: **V9 - Fuentes con datos en las últimas 24 h**.
 | Registrar passkey o FIDO2 de adminti01/02 y de las cuentas de emergencia | Mi información de seguridad | CA03, V5 |
 | `CREATE USER [vm-erp01] FROM EXTERNAL PROVIDER` | sqlcmd local por túnel SSH a través de jump01 (ver V10 en `validaciones.md`) | Conexión del ERP a SQL |
 | Instalar y registrar el conector de red privada en vm-erp01 | Entra → Global Secure Access → Conectores | App Proxy |
-| Publicar el ERP (`http://erp01.interno.lab`) con preautenticación de Entra ID y asignar grp-finanzas y grp-comercial-remoto | Entra → Aplicaciones empresariales | V3 |
+| Publicar el ERP (`https://erp01.interno.lab`) con preautenticación de Entra ID y asignar grp-finanzas y grp-comercial-remoto | Entra → Aplicaciones empresariales | V3 |
 | Instalar Microsoft Entra Cloud Sync en vm-dc01 | vm-dc01 | Identidad híbrida |
 | Instalar el agente MARS en vm-dc01 y programar la copia diaria del estado del sistema (30 días) | vm-dc01 y bóveda `rsv-proto-<sufijo>` | Respaldo del DC (Tabla 19) |
 | Agregar el envío de correo al playbook (conector Office 365) | Diseñador de Logic Apps | V9 (notificación) |

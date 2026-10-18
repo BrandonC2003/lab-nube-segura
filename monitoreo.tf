@@ -353,9 +353,11 @@ resource "azurerm_sentinel_alert_rule_scheduled" "fuerza_bruta_entra" {
   trigger_threshold          = 0
 
   # 50126: usuario o contraseña no válidos
+  # 50053: cuenta bloqueada por el bloqueo inteligente (Entra lo devuelve en lugar de 50126
+  #        cuando ya bloqueó los intentos, por ejemplo desde una IP con mala reputación)
   query = <<-KQL
     SigninLogs
-    | where ResultType == "50126"
+    | where ResultType in ("50126", "50053")
     | summarize Fallos = count(), IPs = make_set(IPAddress) by UserPrincipalName, UserId
     | where Fallos >= 5
   KQL
